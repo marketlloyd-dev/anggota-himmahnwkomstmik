@@ -18,7 +18,8 @@ const allMenuItems = [
   { label: 'Laporan Divisi', href: '/laporan', icon: HiDocumentText, roles: ['ketua', 'sekretaris'] },
   { label: 'Kalender', href: '/kalender', icon: HiCalendar, roles: ['ketua', 'sekretaris', 'bendahara', 'anggota'] },
   { label: 'Pengumuman', href: '/pengumuman', icon: HiSpeakerphone, roles: ['ketua'] },
-  { label: 'Chat Divisi', href: '/chat', icon: HiChatAlt2, roles: ['ketua', 'sekretaris', 'bendahara', 'anggota'] },
+  { label: 'Forum', href: '/forum', icon: HiChatAlt2, roles: ['ketua', 'sekretaris', 'bendahara', 'anggota'] },
+  { label: 'Aktivitas', href: '/aktivitas', icon: HiDocumentText, roles: ['ketua', 'sekretaris', 'bendahara', 'anggota'] },
 ]
 
 export default function Sidebar() {
