@@ -6,15 +6,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 
 export default function LoginPage() {
-  const [mode, setMode] = useState('login') // 'login' atau 'daftar'
+  const [mode, setMode] = useState('login')
   const [loading, setLoading] = useState(false)
 
-  // Form state
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [namaLengkap, setNamaLengkap] = useState('')
   const [divisi, setDivisi] = useState('')
-  const [jabatan, setJabatan] = useState('')
 
   const router = useRouter()
 
@@ -34,40 +32,39 @@ export default function LoginPage() {
   }
 
   const handleDaftar = async (e) => {
-  e.preventDefault()
-  if (!email || !password || !namaLengkap || !divisi) {
-    return toast.error('Email, password, nama, dan divisi wajib diisi')
-  }
-  setLoading(true)
-  try {
-    const res = await fetch('/api/daftar', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email,
-        password,
-        nama_lengkap: namaLengkap,
-        divisi,
-        jabatan: jabatan || 'Anggota'
+    e.preventDefault()
+    if (!email || !password || !namaLengkap || !divisi) {
+      return toast.error('Email, password, nama, dan divisi wajib diisi')
+    }
+    setLoading(true)
+    try {
+      const res = await fetch('/api/daftar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          password,
+          nama_lengkap: namaLengkap,
+          divisi,
+          jabatan: 'Anggota', // otomatis
+        }),
       })
-    })
 
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'Gagal mendaftar')
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Gagal mendaftar')
 
-    toast.success('Akun berhasil dibuat! Silakan login.')
-    setMode('login')
-    setEmail('')
-    setPassword('')
-    setNamaLengkap('')
-    setDivisi('')
-    setJabatan('')
-  } catch (err) {
-    toast.error('Gagal mendaftar: ' + err.message)
-  } finally {
-    setLoading(false)
+      toast.success('Akun berhasil dibuat! Silakan login.')
+      setMode('login')
+      setEmail('')
+      setPassword('')
+      setNamaLengkap('')
+      setDivisi('')
+    } catch (err) {
+      toast.error('Gagal mendaftar: ' + err.message)
+    } finally {
+      setLoading(false)
+    }
   }
-}
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
@@ -181,13 +178,6 @@ export default function LoginPage() {
                 <option>Pemberdayaan Ekonomi dan Bisnis</option>
                 <option>Penelitian dan Pemberdayaan Civil Society</option>
               </select>
-              <input
-                type="text"
-                value={jabatan}
-                onChange={(e) => setJabatan(e.target.value)}
-                placeholder="Jabatan (opsional, default: Anggota)"
-                className="w-full bg-himmah-medium/50 text-white border border-himmah-accent/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-himmah-accent placeholder-gray-400"
-              />
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}

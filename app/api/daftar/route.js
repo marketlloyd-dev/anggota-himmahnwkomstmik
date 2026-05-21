@@ -4,7 +4,6 @@ export async function POST(request) {
   try {
     const { email, password, nama_lengkap, divisi, jabatan } = await request.json()
 
-    // Validasi input
     if (!email || !password || !nama_lengkap || !divisi) {
       return new Response(
         JSON.stringify({ error: 'Email, password, nama, dan divisi wajib diisi' }),
@@ -12,26 +11,20 @@ export async function POST(request) {
       )
     }
 
-    // Inisialisasi Supabase admin dengan service_role key
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
     )
 
-    // 1. Buat user langsung terkonfirmasi (tanpa kirim email)
+    // 1. Buat user langsung terkonfirmasi
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
-      email_confirm: true,   // langsung konfirmasi
-      user_metadata: {
-        nama_lengkap,
-        divisi,
-        jabatan: jabatan || 'Anggota'
-      }
+      email_confirm: true,
+      user_metadata: { nama_lengkap, divisi, jabatan: jabatan || 'Anggota' }
     })
 
     if (authError) {
-      // Jika error karena email sudah ada, beri pesan yang jelas
       if (authError.message.includes('duplicate')) {
         return new Response(
           JSON.stringify({ error: 'Email sudah terdaftar. Silakan login.' }),
@@ -43,7 +36,7 @@ export async function POST(request) {
 
     const userId = authData.user.id
 
-    // 2. Masukkan data profil ke tabel public.users
+    // 2. Masukkan ke public.users (role selalu 'anggota')
     const { error: profilError } = await supabaseAdmin
       .from('users')
       .insert({
@@ -56,24 +49,8 @@ export async function POST(request) {
       })
 
     if (profilError) {
-      // Jika gagal insert profil, hapus user yang sudah dibuat agar tidak yatim piatu
       await supabaseAdmin.auth.admin.deleteUser(userId)
       throw new Error('Gagal menyimpan data profil: ' + profilError.message)
-    }
-
-    // 3. Kirim notifikasi ke ketua (opsional)
-    const { data: ketuas } = await supabaseAdmin
-      .from('users')
-      .select('id')
-      .eq('role', 'ketua')
-
-    if (ketuas && ketuas.length > 0) {
-      await supabaseAdmin.from('notifications').insert(
-        ketuas.map(k => ({
-          user_id: k.id,
-          pesan: `Anggota baru mendaftar: ${nama_lengkap} (${divisi})`
-        }))
-      )
     }
 
     return new Response(
