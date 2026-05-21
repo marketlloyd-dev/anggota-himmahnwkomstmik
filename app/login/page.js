@@ -1,25 +1,81 @@
 'use client'
 import { useState } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const { login } = useAuth()
-  const router = useRouter()
+  const [mode, setMode] = useState('login') // 'login' atau 'daftar'
   const [loading, setLoading] = useState(false)
 
-  const handleSubmit = async (e) => {
+  // Form state
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [namaLengkap, setNamaLengkap] = useState('')
+  const [divisi, setDivisi] = useState('')
+  const [jabatan, setJabatan] = useState('')
+
+  const router = useRouter()
+
+  const handleLogin = async (e) => {
     e.preventDefault()
+    if (!email || !password) return toast.error('Email dan password wajib diisi')
     setLoading(true)
     try {
-      await login(email, password)
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) throw error
       router.push('/dashboard')
-    } catch (error) {
-      toast.error('Login gagal: ' + error.message)
+    } catch (err) {
+      toast.error('Login gagal: ' + err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDaftar = async (e) => {
+    e.preventDefault()
+    if (!email || !password || !namaLengkap || !divisi) {
+      return toast.error('Email, password, nama, dan divisi wajib diisi')
+    }
+    setLoading(true)
+    try {
+      // 1. Daftarkan user ke Auth
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            nama_lengkap: namaLengkap,
+            divisi: divisi,
+            jabatan: jabatan || 'Anggota',
+          },
+        },
+      })
+      if (error) throw error
+
+      // 2. Masukkan data profil ke public.users (role default = anggota)
+      if (data.user) {
+        const { error: profilError } = await supabase.from('users').insert({
+          id: data.user.id,
+          email: email,
+          nama_lengkap: namaLengkap,
+          divisi: divisi,
+          jabatan: jabatan || 'Anggota',
+          role: 'anggota', // default
+        })
+        if (profilError) throw profilError
+      }
+
+      toast.success('Akun berhasil dibuat! Silakan login.')
+      setMode('login')
+      setEmail('')
+      setPassword('')
+      setNamaLengkap('')
+      setDivisi('')
+      setJabatan('')
+    } catch (err) {
+      toast.error('Gagal mendaftar: ' + err.message)
     } finally {
       setLoading(false)
     }
@@ -43,41 +99,129 @@ export default function LoginPage() {
           </motion.h1>
           <p className="text-himmah-accent mt-2 font-light">Komisariat STMIK SZ NW Anjani</p>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-            required
-            className="w-full bg-himmah-medium/50 text-white border border-himmah-accent/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-himmah-accent placeholder-gray-400"
-          />
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Kata Sandi"
-            required
-            className="w-full bg-himmah-medium/50 text-white border border-himmah-accent/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-himmah-accent placeholder-gray-400"
-          />
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            type="submit"
-            disabled={loading}
-            className="w-full bg-himmah-accent text-white font-bold py-3 rounded-xl hover:bg-emerald-600 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" opacity="0.3" />
-                  <path fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                </svg>
-                Memproses...
-              </span>
-            ) : 'Masuk'}
-          </motion.button>
-        </form>
+
+        <AnimatePresence mode="wait">
+          {mode === 'login' ? (
+            <motion.form
+              key="login"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              onSubmit={handleLogin}
+              className="space-y-5"
+            >
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email"
+                required
+                className="w-full bg-himmah-medium/50 text-white border border-himmah-accent/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-himmah-accent placeholder-gray-400"
+              />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Kata Sandi"
+                required
+                className="w-full bg-himmah-medium/50 text-white border border-himmah-accent/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-himmah-accent placeholder-gray-400"
+              />
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="submit"
+                disabled={loading}
+                className="w-full bg-himmah-accent text-white font-bold py-3 rounded-xl hover:bg-emerald-600 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Memproses...' : 'Masuk'}
+              </motion.button>
+              <p className="text-center text-gray-400 text-sm">
+                Belum punya akun?{' '}
+                <button
+                  type="button"
+                  onClick={() => setMode('daftar')}
+                  className="text-himmah-accent hover:underline font-medium"
+                >
+                  Daftar dulu
+                </button>
+              </p>
+            </motion.form>
+          ) : (
+            <motion.form
+              key="daftar"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              onSubmit={handleDaftar}
+              className="space-y-4"
+            >
+              <input
+                type="text"
+                value={namaLengkap}
+                onChange={(e) => setNamaLengkap(e.target.value)}
+                placeholder="Nama Lengkap"
+                required
+                className="w-full bg-himmah-medium/50 text-white border border-himmah-accent/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-himmah-accent placeholder-gray-400"
+              />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email"
+                required
+                className="w-full bg-himmah-medium/50 text-white border border-himmah-accent/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-himmah-accent placeholder-gray-400"
+              />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password (min. 6 karakter)"
+                required
+                minLength={6}
+                className="w-full bg-himmah-medium/50 text-white border border-himmah-accent/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-himmah-accent placeholder-gray-400"
+              />
+              <select
+                value={divisi}
+                onChange={(e) => setDivisi(e.target.value)}
+                required
+                className="w-full bg-himmah-medium/50 text-white border border-himmah-accent/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-himmah-accent"
+              >
+                <option value="">Pilih Divisi</option>
+                <option>Penguatan Ideologi</option>
+                <option>Kehimmawatian</option>
+                <option>Teknologi Informasi dan Media Sosial</option>
+                <option>Pemberdayaan Ekonomi dan Bisnis</option>
+                <option>Penelitian dan Pemberdayaan Civil Society</option>
+              </select>
+              <input
+                type="text"
+                value={jabatan}
+                onChange={(e) => setJabatan(e.target.value)}
+                placeholder="Jabatan (opsional, default: Anggota)"
+                className="w-full bg-himmah-medium/50 text-white border border-himmah-accent/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-himmah-accent placeholder-gray-400"
+              />
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="submit"
+                disabled={loading}
+                className="w-full bg-himmah-accent text-white font-bold py-3 rounded-xl hover:bg-emerald-600 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Mendaftarkan...' : 'Daftar'}
+              </motion.button>
+              <p className="text-center text-gray-400 text-sm">
+                Sudah punya akun?{' '}
+                <button
+                  type="button"
+                  onClick={() => setMode('login')}
+                  className="text-himmah-accent hover:underline font-medium"
+                >
+                  Login
+                </button>
+              </p>
+            </motion.form>
+          )}
+        </AnimatePresence>
       </motion.div>
     </div>
   )
