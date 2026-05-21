@@ -54,15 +54,26 @@ export default function LoginPage() {
       })
       if (error) throw error
 
-      // 2. Masukkan data profil ke public.users (role default = anggota)
-      if (data.user) {
+      // 2. Langsung konfirmasi user lewat API route (service_role)
+      if (data?.user) {
+        const res = await fetch('/api/konfirmasi-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: data.user.id }),
+        })
+        if (!res.ok) {
+          const errData = await res.json()
+          throw new Error(errData.error || 'Gagal konfirmasi user')
+        }
+
+        // 3. Masukkan data profil ke public.users
         const { error: profilError } = await supabase.from('users').insert({
           id: data.user.id,
           email: email,
           nama_lengkap: namaLengkap,
           divisi: divisi,
           jabatan: jabatan || 'Anggota',
-          role: 'anggota', // default
+          role: 'anggota',
         })
         if (profilError) throw profilError
       }
