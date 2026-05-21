@@ -34,63 +34,40 @@ export default function LoginPage() {
   }
 
   const handleDaftar = async (e) => {
-    e.preventDefault()
-    if (!email || !password || !namaLengkap || !divisi) {
-      return toast.error('Email, password, nama, dan divisi wajib diisi')
-    }
-    setLoading(true)
-    try {
-      // 1. Daftarkan user ke Auth
-      const { data, error } = await supabase.auth.signUp({
+  e.preventDefault()
+  if (!email || !password || !namaLengkap || !divisi) {
+    return toast.error('Email, password, nama, dan divisi wajib diisi')
+  }
+  setLoading(true)
+  try {
+    const res = await fetch('/api/daftar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         email,
         password,
-        options: {
-          data: {
-            nama_lengkap: namaLengkap,
-            divisi: divisi,
-            jabatan: jabatan || 'Anggota',
-          },
-        },
+        nama_lengkap: namaLengkap,
+        divisi,
+        jabatan: jabatan || 'Anggota'
       })
-      if (error) throw error
+    })
 
-      // 2. Langsung konfirmasi user lewat API route (service_role)
-      if (data?.user) {
-        const res = await fetch('/api/konfirmasi-user', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: data.user.id }),
-        })
-        if (!res.ok) {
-          const errData = await res.json()
-          throw new Error(errData.error || 'Gagal konfirmasi user')
-        }
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Gagal mendaftar')
 
-        // 3. Masukkan data profil ke public.users
-        const { error: profilError } = await supabase.from('users').insert({
-          id: data.user.id,
-          email: email,
-          nama_lengkap: namaLengkap,
-          divisi: divisi,
-          jabatan: jabatan || 'Anggota',
-          role: 'anggota',
-        })
-        if (profilError) throw profilError
-      }
-
-      toast.success('Akun berhasil dibuat! Silakan login.')
-      setMode('login')
-      setEmail('')
-      setPassword('')
-      setNamaLengkap('')
-      setDivisi('')
-      setJabatan('')
-    } catch (err) {
-      toast.error('Gagal mendaftar: ' + err.message)
-    } finally {
-      setLoading(false)
-    }
+    toast.success('Akun berhasil dibuat! Silakan login.')
+    setMode('login')
+    setEmail('')
+    setPassword('')
+    setNamaLengkap('')
+    setDivisi('')
+    setJabatan('')
+  } catch (err) {
+    toast.error('Gagal mendaftar: ' + err.message)
+  } finally {
+    setLoading(false)
   }
+}
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
