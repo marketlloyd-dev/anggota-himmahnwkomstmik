@@ -12,7 +12,9 @@ export default function KeuanganPage() {
   const [kasList, setKasList] = useState([])
   const [anggota, setAnggota] = useState([])
   const [form, setForm] = useState({ user_id: '', jumlah: '', bulan: '' })
+  const [loading, setLoading] = useState(false)
 
+  // Cek akses
   if (profile?.role !== 'ketua' && profile?.role !== 'bendahara') {
     return (
       <div className="flex min-h-screen">
@@ -33,7 +35,14 @@ export default function KeuanganPage() {
   }, [])
 
   const fetchKas = async () => {
-    const { data } = await supabase.from('kas').select('*, users!inner(nama_lengkap)').order('bulan', { ascending: false })
+    const { data, error } = await supabase
+      .from('kas')
+      .select('*, users!inner(nama_lengkap)')
+      .order('bulan', { ascending: false })
+    if (error) {
+      toast.error('Gagal memuat data kas')
+      return
+    }
     setKasList(data || [])
   }
 
@@ -43,19 +52,45 @@ export default function KeuanganPage() {
   }
 
   const handleBayar = async () => {
-    if (!form.user_id || !form.jumlah || !form.bulan) return toast.error('Lengkapi semua field')
-    const { error } = await supabase.from('kas').upsert({
-      user_id: form.user_id,
-      jumlah: parseFloat(form.jumlah),
-      bulan: form.bulan,
-      status_pembayaran: 'lunas'
-    })
-    if (!error) {
-      toast.success('Pembayaran dicatat')
-      fetchKas()
+    if (!form.user_id || !form.jumlah || !form.bulan) {
+      toast.error('Lengkapi semua field')
+      return
+    }
+
+    // Ubah format bulan jadi tanggal (YYYY-MM-DD)
+    const tanggalMulai = form.bulan + '-01' // misal "2026-06-01"
+
+    setLoading(true)
+    try {
+      const { error } = await supabase.from('kas').upsert(
+        {
+          user_id: form.user_id,
+          jumlah: parseFloat(form.jumlah),
+          bulan: tanggalMulai,   // kirim sebagai date
+          status_pembayaran: 'lunas'
+        },
+        {
+          onConflict: 'user_id, bulan'   // jika ada constraint, bisa dikosongkan
+        }
+      )
+
+      if (error) {
+        console.error('Error upsert kas:', error)
+        if (error.message.includes('duplicate')) {
+          toast.error('Data untuk anggota dan bulan ini sudah ada, gunakan edit jika perlu')
+        } else {
+          toast.error('Gagal menyimpan: ' + error.message)
+        }
+        return
+      }
+
+      toast.success('Pembayaran berhasil dicatat')
       setForm({ user_id: '', jumlah: '', bulan: '' })
-    } else {
-      toast.error('Gagal menyimpan')
+      fetchKas()
+    } catch (err) {
+      toast.error('Error: ' + err.message)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -68,15 +103,37 @@ export default function KeuanganPage() {
           <h1 className="text-2xl font-bold text-white mb-6">Manajemen Keuangan Kas</h1>
 
           <div className="bg-himmah-dark p-4 rounded-xl mb-6 border border-himmah-medium grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-            <select value={form.user_id} onChange={(e) => setForm({ ...form, user_id: e.target.value })} className="bg-himmah-medium text-white rounded-lg px-3 py-2 w-full">
+            <select
+              value={form.user_id}
+              onChange={(e) => setForm({ ...form, user_id: e.target.value })}
+              className="bg-himmah-medium text-white rounded-lg px-3 py-2 w-full"
+            >
               <option value="">Pilih Anggota</option>
               {anggota.map((a) => (
                 <option key={a.id} value={a.id}>{a.nama_lengkap}</option>
               ))}
             </select>
-            <input type="number" placeholder="Jumlah" value={form.jumlah} onChange={(e) => setForm({ ...form, jumlah: e.target.value })} className="bg-himmah-medium text-white rounded-lg px-3 py-2 w-full" />
-            <input type="month" value={form.bulan} onChange={(e) => setForm({ ...form, bulan: e.target.value })} className="bg-himmah-medium text-white rounded-lg px-3 py-2 w-full" />
-            <motion.button whileTap={{ scale: 0.9 }} onClick={handleBayar} className="bg-himmah-accent text-white py-2 px-4 rounded-lg font-medium w-full">Catat Pembayaran</motion.button>
+            <input
+              type="number"
+              placeholder="Jumlah"
+              value={form.jumlah}
+              onChange={(e) => setForm({ ...form, jumlah: e.target.value })}
+              className="bg-himmah-medium text-white rounded-lg px-3 py-2 w-full"
+            />
+            <input
+              type="month"
+              value={form.bulan}
+              onChange={(e) => setForm({ ...form, bulan: e.target.value })}
+              className="bg-himmah-medium text-white rounded-lg px-3 py-2 w-full"
+            />
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={handleBayar}
+              disabled={loading}
+              className="bg-himmah-accent text-white py-2 px-4 rounded-lg font-medium w-full disabled:opacity-70"
+            >
+              {loading ? 'Menyimpan...' : 'Catat Pembayaran'}
+            </motion.button>
           </div>
 
           <div className="bg-himmah-dark rounded-xl overflow-hidden border border-himmah-medium overflow-x-auto">
@@ -90,16 +147,22 @@ export default function KeuanganPage() {
                 </tr>
               </thead>
               <tbody>
-                {kasList.map((k) => (
-                  <tr key={k.id} className="border-b border-himmah-medium hover:bg-himmah-medium/20">
-                    <td className="p-3">{k.users?.nama_lengkap}</td>
-                    <td className="p-3">{k.bulan}</td>
-                    <td className="p-3">Rp {Number(k.jumlah).toLocaleString()}</td>
-                    <td className="p-3">
-                      <span className={`px-2 py-1 rounded text-xs ${k.status_pembayaran === 'lunas' ? 'bg-green-800' : 'bg-red-800'}`}>{k.status_pembayaran}</span>
-                    </td>
-                  </tr>
-                ))}
+                {kasList.map((k) => {
+                  // Tampilkan bulan dalam format YYYY-MM dari kolom date
+                  const bulanStr = k.bulan ? k.bulan.substring(0, 7) : '-'
+                  return (
+                    <tr key={k.id} className="border-b border-himmah-medium hover:bg-himmah-medium/20">
+                      <td className="p-3">{k.users?.nama_lengkap}</td>
+                      <td className="p-3">{bulanStr}</td>
+                      <td className="p-3">Rp {Number(k.jumlah).toLocaleString()}</td>
+                      <td className="p-3">
+                        <span className={`px-2 py-1 rounded text-xs ${k.status_pembayaran === 'lunas' ? 'bg-green-800' : 'bg-red-800'}`}>
+                          {k.status_pembayaran}
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
