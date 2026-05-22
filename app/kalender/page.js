@@ -27,10 +27,7 @@ export default function KalenderPage() {
       .then(({ data }) => setEvents(data || []))
   }, [currentMonth])
 
-  const days = eachDayOfInterval({
-    start: startOfMonth(currentMonth),
-    end: endOfMonth(currentMonth)
-  })
+  const days = eachDayOfInterval({ start: startOfMonth(currentMonth), end: endOfMonth(currentMonth) })
 
   const handleCreateEvent = async () => {
     if (!form.judul || !form.tanggal_mulai) return toast.error('Judul dan tanggal wajib')
@@ -40,6 +37,12 @@ export default function KalenderPage() {
     })
     if (!error) {
       toast.success('Event ditambahkan')
+      // Log aktivitas
+      await supabase.from('activity_logs').insert({
+        user_id: profile.id,
+        aksi: 'menambahkan event baru',
+        deskripsi: `Event: ${form.judul} pada ${form.tanggal_mulai}`
+      })
       setShowForm(false)
       setForm({ judul: '', deskripsi: '', tanggal_mulai: '', jam: '', lokasi: '' })
       // Refresh events
@@ -47,8 +50,6 @@ export default function KalenderPage() {
       const end = endOfMonth(currentMonth)
       const { data } = await supabase.from('events').select('*').gte('tanggal_mulai', format(start, 'yyyy-MM-dd')).lte('tanggal_mulai', format(end, 'yyyy-MM-dd'))
       setEvents(data || [])
-    } else {
-      toast.error('Gagal menambah event')
     }
   }
 
@@ -60,44 +61,32 @@ export default function KalenderPage() {
         <div className="p-4 md:p-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
             <h1 className="text-2xl font-bold text-white">Kalender Kegiatan</h1>
-            <button onClick={() => setShowForm(true)} className="bg-himmah-accent px-4 py-2 rounded-lg text-white font-medium">
-              + Tambah Event
-            </button>
+            <button onClick={() => setShowForm(true)} className="bg-himmah-accent px-4 py-2 rounded-lg text-white font-medium">+ Tambah Event</button>
           </div>
 
-          {/* Kalender */}
           <div className="bg-himmah-dark rounded-xl p-4 border border-himmah-medium mb-6">
             <div className="flex justify-between items-center mb-4 text-white">
-              <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))} className="px-2 py-1 hover:bg-himmah-medium rounded">&lt;</button>
+              <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}>&lt;</button>
               <h2 className="text-lg font-semibold capitalize">{format(currentMonth, 'MMMM yyyy', { locale: id })}</h2>
-              <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))} className="px-2 py-1 hover:bg-himmah-medium rounded">&gt;</button>
+              <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}>&gt;</button>
             </div>
-
             <div className="grid grid-cols-7 gap-1 text-xs text-center text-gray-400 mb-2">
               {['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'].map(d => <div key={d}>{d}</div>)}
             </div>
-
             <div className="grid grid-cols-7 gap-1">
               {Array.from({ length: startOfMonth(currentMonth).getDay() }).map((_, i) => <div key={`empty-${i}`} />)}
               {days.map((day) => {
                 const eventDay = events.filter(e => isSameDay(new Date(e.tanggal_mulai), day))
                 return (
-                  <motion.div
-                    key={day.toString()}
-                    whileHover={{ scale: 1.1 }}
-                    className={`p-2 rounded text-sm text-white relative ${eventDay.length > 0 ? 'bg-himmah-accent font-bold' : 'hover:bg-himmah-medium'}`}
-                  >
+                  <motion.div key={day.toString()} whileHover={{ scale: 1.1 }} className={`p-2 rounded text-sm text-white relative ${eventDay.length > 0 ? 'bg-himmah-accent font-bold' : 'hover:bg-himmah-medium'}`}>
                     {format(day, 'd')}
-                    {eventDay.length > 0 && (
-                      <span className="absolute top-0 right-0 w-2 h-2 bg-yellow-400 rounded-full" />
-                    )}
+                    {eventDay.length > 0 && <span className="absolute top-0 right-0 w-2 h-2 bg-yellow-400 rounded-full" />}
                   </motion.div>
                 )
               })}
             </div>
           </div>
 
-          {/* Daftar event */}
           <div className="space-y-3">
             {events.map(e => (
               <div key={e.id} className="bg-himmah-dark p-3 rounded-lg border border-himmah-medium text-white">
@@ -108,23 +97,10 @@ export default function KalenderPage() {
             ))}
           </div>
 
-          {/* Modal form event */}
           <AnimatePresence>
             {showForm && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
-                onClick={() => setShowForm(false)}
-              >
-                <motion.div
-                  initial={{ scale: 0.8 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0.8 }}
-                  onClick={(e) => e.stopPropagation()}
-                  className="bg-himmah-dark p-6 rounded-2xl w-full max-w-md border border-himmah-accent/30"
-                >
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => setShowForm(false)}>
+                <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} exit={{ scale: 0.8 }} onClick={(e) => e.stopPropagation()} className="bg-himmah-dark p-6 rounded-2xl w-full max-w-md border border-himmah-accent/30">
                   <h3 className="text-xl font-bold text-white mb-4">Tambah Event</h3>
                   <div className="space-y-3">
                     <input value={form.judul} onChange={(e) => setForm({...form, judul: e.target.value})} placeholder="Judul" className="w-full bg-himmah-medium text-white rounded px-3 py-2" />

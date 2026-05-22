@@ -33,30 +33,19 @@ export default function AktivitasPage() {
 
           <div className="bg-himmah-dark rounded-xl border border-himmah-medium overflow-hidden">
             {logs.length === 0 ? (
-              <div className="p-8 text-center text-gray-400">
-                Belum ada aktivitas tercatat.
-              </div>
+              <div className="p-8 text-center text-gray-400">Belum ada aktivitas tercatat.</div>
             ) : (
               <div className="divide-y divide-himmah-medium">
                 {logs.map((log) => (
-                  <motion.div
-                    key={log.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="p-4 flex items-start gap-3"
-                  >
+                  <motion.div key={log.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 flex items-start gap-3">
                     <div className="w-2 h-2 bg-himmah-accent rounded-full mt-2" />
                     <div className="flex-1">
                       <p className="text-white text-sm">
                         <span className="font-medium">{log.users?.nama_lengkap}</span>{' '}
                         {log.aksi}
                       </p>
-                      {log.deskripsi && (
-                        <p className="text-gray-400 text-xs mt-1">{log.deskripsi}</p>
-                      )}
-                      <p className="text-gray-500 text-xs mt-1">
-                        {format(new Date(log.created_at), 'dd MMM yyyy HH:mm', { locale: id })}
-                      </p>
+                      {log.deskripsi && <p className="text-gray-400 text-xs mt-1">{log.deskripsi}</p>}
+                      <p className="text-gray-500 text-xs mt-1">{format(new Date(log.created_at), 'dd MMM yyyy HH:mm', { locale: id })}</p>
                     </div>
                   </motion.div>
                 ))}

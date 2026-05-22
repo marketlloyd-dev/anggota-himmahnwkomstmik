@@ -30,7 +30,6 @@ export function AuthProvider({ children }) {
       }
     )
 
-    // Initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUser(session.user)

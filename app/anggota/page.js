@@ -50,7 +50,6 @@ export default function AnggotaPage() {
             )}
           </div>
 
-          {/* Daftar Anggota */}
           <div className="bg-himmah-dark rounded-xl border border-himmah-medium overflow-x-auto">
             <table className="w-full text-white text-sm min-w-[600px]">
               <thead className="bg-himmah-medium">
@@ -91,7 +90,6 @@ export default function AnggotaPage() {
             </table>
           </div>
 
-          {/* Modal Form */}
           <AnimatePresence>
             {showForm && (
               <FormAnggota
@@ -107,7 +105,6 @@ export default function AnggotaPage() {
   )
 }
 
-// Komponen Form Anggota
 function FormAnggota({ onClose, onSuccess, initialData }) {
   const [form, setForm] = useState({
     nama_lengkap: initialData?.nama_lengkap || '',

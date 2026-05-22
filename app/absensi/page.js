@@ -39,7 +39,6 @@ export default function AbsensiPage() {
     })
     if (!error) toast.success('Absen tercatat')
     else toast.error('Gagal')
-    // Update local state
     setAttendance(prev => ({ ...prev, [userId]: status }))
   }
 
@@ -51,7 +50,6 @@ export default function AbsensiPage() {
         <div className="p-4 md:p-6">
           <h1 className="text-2xl font-bold text-white mb-6">Absensi Rapat</h1>
 
-          {/* Daftar rapat */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-8">
             {meetings.map((m) => (
               <motion.div
@@ -67,7 +65,6 @@ export default function AbsensiPage() {
             ))}
           </div>
 
-          {/* Absensi untuk rapat terpilih */}
           {selectedMeeting && (
             <motion.div
               initial={{ opacity: 0 }}

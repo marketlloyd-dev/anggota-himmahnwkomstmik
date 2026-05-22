@@ -2,7 +2,6 @@
 import { motion } from 'framer-motion'
 
 export default function AttendanceChart({ data }) {
-  // data: array {label, value}
   return (
     <div className="bg-himmah-dark p-4 rounded-xl border border-himmah-medium">
       <h3 className="text-white font-medium mb-4">Statistik Kehadiran</h3>

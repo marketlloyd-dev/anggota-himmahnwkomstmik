@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import {
   HiHome, HiUsers, HiClipboardList, HiCash,
   HiDocumentText, HiCalendar, HiChatAlt2, HiSpeakerphone,
-  HiMenu, HiX, HiLogout
+  HiMenu, HiX, HiLogout, HiCollection
 } from 'react-icons/hi'
 
 const allMenuItems = [
@@ -19,7 +19,7 @@ const allMenuItems = [
   { label: 'Kalender', href: '/kalender', icon: HiCalendar, roles: ['ketua', 'sekretaris', 'bendahara', 'anggota'] },
   { label: 'Pengumuman', href: '/pengumuman', icon: HiSpeakerphone, roles: ['ketua'] },
   { label: 'Forum', href: '/forum', icon: HiChatAlt2, roles: ['ketua', 'sekretaris', 'bendahara', 'anggota'] },
-  { label: 'Aktivitas', href: '/aktivitas', icon: HiDocumentText, roles: ['ketua', 'sekretaris', 'bendahara', 'anggota'] },
+  { label: 'Aktivitas', href: '/aktivitas', icon: HiCollection, roles: ['ketua', 'sekretaris', 'bendahara', 'anggota'] },
 ]
 
 export default function Sidebar() {
@@ -27,19 +27,14 @@ export default function Sidebar() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
 
-  const chatHref = profile?.divisi
-    ? `/chat/${encodeURIComponent(profile.divisi.toLowerCase().replace(/\s+/g, '-'))}`
-    : '/chat/umum'
-
-  const finalMenu = allMenuItems
-    .filter(item => !item.roles || item.roles.includes(profile?.role))
-    .map(item => (item.label === 'Chat Divisi' ? { ...item, href: chatHref } : item))
+  const finalMenu = allMenuItems.filter(
+    item => !item.roles || item.roles.includes(profile?.role)
+  )
 
   const closeSidebar = () => setIsOpen(false)
 
   return (
     <>
-      {/* Tombol Hamburger (mobile) - selalu di kiri atas, di atas sidebar */}
       <button
         onClick={() => setIsOpen(prev => !prev)}
         className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-himmah-accent text-white rounded-lg shadow-lg"
@@ -48,7 +43,6 @@ export default function Sidebar() {
         {isOpen ? <HiX size={22} /> : <HiMenu size={22} />}
       </button>
 
-      {/* Overlay gelap saat sidebar terbuka di mobile */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -61,7 +55,6 @@ export default function Sidebar() {
         )}
       </AnimatePresence>
 
-      {/* Sidebar */}
       <aside
         className={`
           fixed top-0 left-0 z-40 h-full w-64 bg-himmah-darkest border-r border-himmah-medium
@@ -71,13 +64,11 @@ export default function Sidebar() {
         `}
       >
         <div className="p-4 flex-1 flex flex-col">
-          {/* Logo / Judul */}
           <div className="text-center mb-6 mt-4 lg:mt-0">
             <h1 className="text-xl font-bold text-white">HIMMAH NW</h1>
             <p className="text-xs text-himmah-accent">Komisariat STMIK SZ NW Anjani</p>
           </div>
 
-          {/* Menu */}
           <nav className="space-y-1 flex-1">
             {finalMenu.map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
@@ -101,7 +92,6 @@ export default function Sidebar() {
           </nav>
         </div>
 
-        {/* Profil & Logout */}
         <div className="p-4 border-t border-himmah-medium">
           {profile && (
             <div className="flex items-center gap-3 mb-3">

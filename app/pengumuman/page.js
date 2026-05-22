@@ -48,6 +48,12 @@ export default function PengumumanPage() {
         const notifs = users.map(u => ({ user_id: u.id, pesan: `Pengumuman baru: ${form.judul}` }))
         await supabase.from('notifications').insert(notifs)
       }
+      // Log aktivitas
+      await supabase.from('activity_logs').insert({
+        user_id: profile.id,
+        aksi: 'mempublikasikan pengumuman',
+        deskripsi: `Pengumuman: ${form.judul}`
+      })
       toast.success('Pengumuman dipublikasikan')
       setForm({ judul: '', konten: '' })
       fetchAnnouncements()
@@ -65,38 +71,16 @@ export default function PengumumanPage() {
           <h1 className="text-2xl font-bold text-white mb-6">Pengumuman</h1>
 
           <div className="bg-himmah-dark p-4 rounded-xl mb-6 border border-himmah-medium space-y-3">
-            <input
-              value={form.judul}
-              onChange={(e) => setForm({ ...form, judul: e.target.value })}
-              placeholder="Judul Pengumuman"
-              className="w-full bg-himmah-medium text-white rounded-lg px-4 py-2"
-            />
-            <textarea
-              value={form.konten}
-              onChange={(e) => setForm({ ...form, konten: e.target.value })}
-              placeholder="Isi pengumuman..."
-              rows={4}
-              className="w-full bg-himmah-medium text-white rounded-lg px-4 py-2 resize-y"
-            />
+            <input value={form.judul} onChange={(e) => setForm({ ...form, judul: e.target.value })} placeholder="Judul Pengumuman" className="w-full bg-himmah-medium text-white rounded-lg px-4 py-2" />
+            <textarea value={form.konten} onChange={(e) => setForm({ ...form, konten: e.target.value })} placeholder="Isi pengumuman..." rows={4} className="w-full bg-himmah-medium text-white rounded-lg px-4 py-2 resize-y" />
             <div className="flex justify-end">
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={handleCreate}
-                className="bg-himmah-accent px-6 py-2 rounded-lg text-white font-medium"
-              >
-                Publikasikan
-              </motion.button>
+              <motion.button whileTap={{ scale: 0.95 }} onClick={handleCreate} className="bg-himmah-accent px-6 py-2 rounded-lg text-white font-medium">Publikasikan</motion.button>
             </div>
           </div>
 
           <div className="space-y-4">
             {announcements.map((a) => (
-              <motion.div
-                key={a.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-himmah-dark p-5 rounded-xl border border-himmah-accent/30"
-              >
+              <motion.div key={a.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-himmah-dark p-5 rounded-xl border border-himmah-accent/30">
                 <h3 className="text-white font-bold text-lg">{a.judul}</h3>
                 <p className="text-gray-300 mt-2 whitespace-pre-wrap">{a.konten}</p>
                 <p className="text-xs text-gray-500 mt-3">{new Date(a.created_at).toLocaleString()}</p>

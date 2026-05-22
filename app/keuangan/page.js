@@ -67,41 +67,18 @@ export default function KeuanganPage() {
         <div className="p-4 md:p-6">
           <h1 className="text-2xl font-bold text-white mb-6">Manajemen Keuangan Kas</h1>
 
-          {/* Form Input */}
           <div className="bg-himmah-dark p-4 rounded-xl mb-6 border border-himmah-medium grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-            <select
-              value={form.user_id}
-              onChange={(e) => setForm({ ...form, user_id: e.target.value })}
-              className="bg-himmah-medium text-white rounded-lg px-3 py-2 w-full"
-            >
+            <select value={form.user_id} onChange={(e) => setForm({ ...form, user_id: e.target.value })} className="bg-himmah-medium text-white rounded-lg px-3 py-2 w-full">
               <option value="">Pilih Anggota</option>
               {anggota.map((a) => (
                 <option key={a.id} value={a.id}>{a.nama_lengkap}</option>
               ))}
             </select>
-            <input
-              type="number"
-              placeholder="Jumlah"
-              value={form.jumlah}
-              onChange={(e) => setForm({ ...form, jumlah: e.target.value })}
-              className="bg-himmah-medium text-white rounded-lg px-3 py-2 w-full"
-            />
-            <input
-              type="month"
-              value={form.bulan}
-              onChange={(e) => setForm({ ...form, bulan: e.target.value })}
-              className="bg-himmah-medium text-white rounded-lg px-3 py-2 w-full"
-            />
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={handleBayar}
-              className="bg-himmah-accent text-white py-2 px-4 rounded-lg font-medium w-full"
-            >
-              Catat Pembayaran
-            </motion.button>
+            <input type="number" placeholder="Jumlah" value={form.jumlah} onChange={(e) => setForm({ ...form, jumlah: e.target.value })} className="bg-himmah-medium text-white rounded-lg px-3 py-2 w-full" />
+            <input type="month" value={form.bulan} onChange={(e) => setForm({ ...form, bulan: e.target.value })} className="bg-himmah-medium text-white rounded-lg px-3 py-2 w-full" />
+            <motion.button whileTap={{ scale: 0.9 }} onClick={handleBayar} className="bg-himmah-accent text-white py-2 px-4 rounded-lg font-medium w-full">Catat Pembayaran</motion.button>
           </div>
 
-          {/* Tabel Kas */}
           <div className="bg-himmah-dark rounded-xl overflow-hidden border border-himmah-medium overflow-x-auto">
             <table className="w-full text-sm text-white min-w-[500px]">
               <thead className="bg-himmah-medium">
@@ -119,9 +96,7 @@ export default function KeuanganPage() {
                     <td className="p-3">{k.bulan}</td>
                     <td className="p-3">Rp {Number(k.jumlah).toLocaleString()}</td>
                     <td className="p-3">
-                      <span className={`px-2 py-1 rounded text-xs ${k.status_pembayaran === 'lunas' ? 'bg-green-800' : 'bg-red-800'}`}>
-                        {k.status_pembayaran}
-                      </span>
+                      <span className={`px-2 py-1 rounded text-xs ${k.status_pembayaran === 'lunas' ? 'bg-green-800' : 'bg-red-800'}`}>{k.status_pembayaran}</span>
                     </td>
                   </tr>
                 ))}
