@@ -20,6 +20,7 @@ const allMenuItems = [
   { label: 'Pengumuman', href: '/pengumuman', icon: HiSpeakerphone, roles: ['ketua'] },
   { label: 'Forum', href: '/forum', icon: HiChatAlt2, roles: ['ketua', 'sekretaris', 'bendahara', 'anggota'] },
   { label: 'Aktivitas', href: '/aktivitas', icon: HiCollection, roles: ['ketua', 'sekretaris', 'bendahara', 'anggota'] },
+  { label: 'Profil', href: '/profil', icon: HiUser, roles: ['ketua', 'sekretaris', 'bendahara', 'anggota'] },
 ]
 
 export default function Sidebar() {

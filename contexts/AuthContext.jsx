@@ -11,18 +11,22 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
+  const fetchProfile = async (userId) => {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userId)
+      .single()
+    if (!error) setProfile(data)
+  }
+
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         const currentUser = session?.user ?? null
         setUser(currentUser)
         if (currentUser) {
-          const { data } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', currentUser.id)
-            .single()
-          setProfile(data)
+          await fetchProfile(currentUser.id)
         } else {
           setProfile(null)
         }
@@ -33,12 +37,7 @@ export function AuthProvider({ children }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUser(session.user)
-        supabase
-          .from('users')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data }) => setProfile(data))
+        fetchProfile(session.user.id)
       }
       setLoading(false)
     })
@@ -47,6 +46,12 @@ export function AuthProvider({ children }) {
       authListener.subscription.unsubscribe()
     }
   }, [])
+
+  const refreshProfile = async () => {
+    if (user) {
+      await fetchProfile(user.id)
+    }
+  }
 
   const login = async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
@@ -61,14 +66,7 @@ export function AuthProvider({ children }) {
     router.push('/login')
   }
 
-  const value = {
-    user,
-    profile,
-    login,
-    logout,
-    loading
-  }
-
+  const value = { user, profile, login, logout, loading, refreshProfile }
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
