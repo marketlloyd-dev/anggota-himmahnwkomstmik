@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 
+
+
 export default function LoginPage() {
   const [mode, setMode] = useState('login')
   const [loading, setLoading] = useState(false)
@@ -15,6 +17,16 @@ export default function LoginPage() {
   const [divisi, setDivisi] = useState('')
 
   const router = useRouter()
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        router.push('/dashboard')
+      }
+    }
+    checkUser()
+  }, [router])
 
   const handleLogin = async (e) => {
     e.preventDefault()
