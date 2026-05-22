@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import {
   HiHome, HiUsers, HiClipboardList, HiCash,
   HiDocumentText, HiCalendar, HiChatAlt2, HiSpeakerphone,
-  HiMenu, HiX, HiLogout, HiCollection
+  HiMenu, HiX, HiLogout, HiCollection, HiUser
 } from 'react-icons/hi'
 
 const allMenuItems = [
