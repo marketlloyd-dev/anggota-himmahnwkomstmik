@@ -38,7 +38,7 @@ export default function AnggotaPage() {
       <main className="flex-1 flex flex-col">
         <Navbar />
         <div className="p-4 md:p-6">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
             <h1 className="text-2xl font-bold text-white">Manajemen Anggota</h1>
             {canManage && (
               <button
@@ -105,6 +105,7 @@ export default function AnggotaPage() {
   )
 }
 
+// Komponen FormAnggota tetap sama persis
 function FormAnggota({ onClose, onSuccess, initialData }) {
   const [form, setForm] = useState({
     nama_lengkap: initialData?.nama_lengkap || '',

@@ -50,7 +50,7 @@ export default function AbsensiPage() {
         <div className="p-4 md:p-6">
           <h1 className="text-2xl font-bold text-white mb-6">Absensi Rapat</h1>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mb-8">
             {meetings.map((m) => (
               <motion.div
                 key={m.id}

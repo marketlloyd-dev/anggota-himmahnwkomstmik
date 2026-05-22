@@ -14,7 +14,6 @@ export default function KeuanganPage() {
   const [form, setForm] = useState({ user_id: '', jumlah: '', bulan: '' })
   const [loading, setLoading] = useState(false)
 
-  // Cek akses
   if (profile?.role !== 'ketua' && profile?.role !== 'bendahara') {
     return (
       <div className="flex min-h-screen">
@@ -57,22 +56,18 @@ export default function KeuanganPage() {
       return
     }
 
-    // Ubah format bulan jadi tanggal (YYYY-MM-DD)
-    const tanggalMulai = form.bulan + '-01' // misal "2026-06-01"
+    const tanggalMulai = form.bulan + '-01'
 
     setLoading(true)
     try {
-      const { error } = await supabase.from('kas').upsert(
-        {
-          user_id: form.user_id,
-          jumlah: parseFloat(form.jumlah),
-          bulan: tanggalMulai,   // kirim sebagai date
-          status_pembayaran: 'lunas'
-        },
-        {
-          onConflict: 'user_id, bulan'   // jika ada constraint, bisa dikosongkan
-        }
-      )
+      const { error } = await supabase.from('kas').upsert({
+        user_id: form.user_id,
+        jumlah: parseFloat(form.jumlah),
+        bulan: tanggalMulai,
+        status_pembayaran: 'lunas'
+      }, {
+        onConflict: 'user_id, bulan'
+      })
 
       if (error) {
         console.error('Error upsert kas:', error)
@@ -148,7 +143,6 @@ export default function KeuanganPage() {
               </thead>
               <tbody>
                 {kasList.map((k) => {
-                  // Tampilkan bulan dalam format YYYY-MM dari kolom date
                   const bulanStr = k.bulan ? k.bulan.substring(0, 7) : '-'
                   return (
                     <tr key={k.id} className="border-b border-himmah-medium hover:bg-himmah-medium/20">
