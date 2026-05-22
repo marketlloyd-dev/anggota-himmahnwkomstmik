@@ -27,6 +27,7 @@ export async function middleware(request) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // Jika user belum login dan bukan halaman login/api, redirect ke /login
   if (!user && !request.nextUrl.pathname.startsWith('/login') && !request.nextUrl.pathname.startsWith('/api')) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
